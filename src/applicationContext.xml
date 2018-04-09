@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+  <context:component-scan base-package="com.yyb"/>
+
+  <mvc:annotation-driven conversion-service="conversionService" />
+
+    <!--sqlSession工厂创建实例-->
+  <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+     <property name="configLocation" value="classpath:mybatis.xml"/>
+     <property name="dataSource" ref="myDataSource"/>
+  </bean>
+
+  <!--srping 创建datasource-->
+  <bean id="myDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+      <property name="user" value="root"></property>
+      <property name="password" value="123456"></property>
+      <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/ssm"></property>
+      <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+  </bean>
+
+
+    <!--让spring提供一个工厂 去根据接口获取接口的实现 -->
+    <bean class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="mapperInterface" value="com.yyb.dao.UserMapper"/>
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+    </bean>
+
+
+    <!--spring的事物管理-->
+
+    <tx:annotation-driven  transaction-manager="txManager"/>
+
+    <bean id="txManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="myDataSource"/>
+    </bean>
+
+    <!--日期格式转化-->
+    <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <bean class="com.yyb.utils.MyDateConverter"/>
+            </set>
+        </property>
+    </bean>
+
+    <!--文件上传-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="512000"/>
+    </bean>
+
+    <!--异常处理-->
+    <bean id="handlerExceptionResolver" class="com.yyb.exception.UserExceptionResolver"/>
+
+    <!--访问权限，只能内部访问-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/"></property>
+        <property name="suffix" value=".jsp"/>
+        <property name="viewNames" value="jsp*"></property>
+        <!--<property name="order" value="2"/>-->
+    </bean>
+
+
+
+</beans>
